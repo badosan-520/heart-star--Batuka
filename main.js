@@ -169,7 +169,7 @@ function createUI() {
 
   const morphBtn = document.createElement('button');
   morphBtn.className = 'action-btn';
-  morphBtn.textContent = 'Morph';
+  morphBtn.textContent = 'Зүрх';
   morphBtn.addEventListener('click', () => {
     morphBtn.classList.toggle('active');
     morphTarget = morphTarget === 0 ? 1 : 0;
@@ -466,4 +466,5 @@ function animate() {
   }
 
   composer.render();
+
 }
