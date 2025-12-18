@@ -8,9 +8,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 let scene, camera, renderer, particles, composer, controls;
 let time = 0;
 let isAnimationEnabled = true;
-let currentTheme = 'molten';
-let morphTarget = 0;
-let morphProgress = 0;
+let currentTheme = 'cosmic';
+let morphTarget = 1;
+let morphProgress = 1;
+let heartbeatTime = 0;
 
 const particleCount = 10000;
 
@@ -107,6 +108,34 @@ function createHeartPath(particleIndex, totalParticles) {
 }
 
 function init() {
+  const audio = document.getElementById('bgm');
+  const musicBtn = document.getElementById('musicBtn');
+
+  if (!audio || !musicBtn) {
+    console.error('❌ Audio эсвэл Button олдсонгүй');
+    return;
+  }
+
+  audio.volume = 0.4;
+
+  musicBtn.addEventListener('click', async () => {
+    try {
+      if (audio.paused) {
+        await audio.play();
+        musicBtn.textContent = '⏸ Дууг зогсоох';
+        console.log('🎵 Дуу тоглож эхэллээ');
+      } else {
+        audio.pause();
+        musicBtn.textContent = '🎵 Дууг тоглуулах';
+        console.log('⏸ Дуу зогслоо');
+      }
+    } catch (err) {
+      console.error('🚫 Audio play error:', err);
+    }
+  });
+
+  // ↓ доошоо Three.js init-үүд чинь хэвээрээ
+
   scene = new THREE.Scene();
 
   camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1500);
@@ -344,14 +373,30 @@ function animateParticles() {
   const disintegrationOffsets = particles.geometry.attributes.disintegrationOffset.array;
 
   morphProgress += (morphTarget - morphProgress) * 0.04;
+  
+  heartbeatTime += 0.03;
+  const heartbeat = 
+    1 +
+  Math.max(0, Math.sin(heartbeatTime * 2.5)) * 0.12 +
+  Math.max(0, Math.sin(heartbeatTime * 2.5 - 0.8)) * 0.06;
 
   for (let i = 0; i < particleCount; i++) {
     const i3 = i * 3;
     const iSize = i;
 
-    const homeX = THREE.MathUtils.lerp(starPositions[i3], heartPositions[i3], morphProgress);
-    const homeY = THREE.MathUtils.lerp(starPositions[i3 + 1], heartPositions[i3 + 1], morphProgress);
-    const homeZ = THREE.MathUtils.lerp(starPositions[i3 + 2], heartPositions[i3 + 2], morphProgress);
+    // const homeX = THREE.MathUtils.lerp(starPositions[i3], heartPositions[i3], morphProgress);
+    // const homeY = THREE.MathUtils.lerp(starPositions[i3 + 1], heartPositions[i3 + 1], morphProgress);
+    // const homeZ = THREE.MathUtils.lerp(starPositions[i3 + 2], heartPositions[i3 + 2], morphProgress);
+    let homeX = THREE.MathUtils.lerp(starPositions[i3], heartPositions[i3], morphProgress);
+    let homeY = THREE.MathUtils.lerp(starPositions[i3 + 1], heartPositions[i3 + 1], morphProgress);
+    let homeZ = THREE.MathUtils.lerp(starPositions[i3 + 2], heartPositions[i3 + 2], morphProgress);
+
+    // ❤️ heartbeat only when heart
+    if (morphProgress > 0.95) {
+      homeX *= heartbeat;
+      homeY *= heartbeat;
+    }
+
 
     const disintegrationCycleTime = 20.0;
     const particleCycleOffset = (i / particleCount) * disintegrationCycleTime * 0.5;
@@ -466,5 +511,4 @@ function animate() {
   }
 
   composer.render();
-
 }
